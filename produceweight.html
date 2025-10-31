@@ -1,0 +1,277 @@
+<html>
+    <head>
+        <title>
+            Welcome Garden Produce Weight Calculator
+        </title>
+        <script>
+            class ProduceWeight {
+                //class to manage an object representing the current table of produce weights and helper methods for table transormations
+                weights;//obj of variety:weight pairs
+                n_shares;//how many csa shares total
+                n_coop_shares;//how many shares diverted to co-op
+                #one_share;//private; obj containing weights divided by n shares
+                #coop_weights;//private; obj containing weights divided by n shares times number of coop shares
+
+                constructor(n_shares , n_coop_shares , weights = {}) {
+                    this.weights = weights;
+                    this.#one_share = {};
+                    this.#coop_weights = {};
+                    this.n_shares = n_shares;
+                    this.n_coop_shares = n_coop_shares;
+                }
+                
+                //log a new box that you just weighed and append
+                add_entry(veg , mass) {
+                    if(veg in this.weights) {
+                        this.weights[veg] = this.weights[veg] + mass;
+                    }
+                    else {
+                        this.weights[veg] = mass;
+                    }
+                }
+
+                //compute how much one share should be
+                #calc_one_share() {
+                    for (const [key, value] of Object.entries(this.weights)) {
+                        this.#one_share[key] = (value / this.n_shares).toFixed(1);
+                    }
+                }
+
+                //compute total weight to give to co-op
+                #calc_coop_weights() {
+                    this.#calc_one_share()
+                    for (const [key, value] of Object.entries(this.#one_share)) {
+                        this.#coop_weights[key] = (value * this.n_coop_shares).toFixed(1);
+                    }
+                }
+
+                //merge >= 2 different produce entries into a single combined row
+                merge(rows) {
+                    let merged_weight = 0;
+                    let merged_name = ""
+                    rows.forEach(row => {
+                        merged_weight += this.weights[row];
+                        merged_name = merged_name + " or " + row;
+                        delete this.weights[row];
+                    });
+                    this.weights[merged_name.substring(3)] = merged_weight;
+                }
+
+                //calculate and return one share's amounts
+                get one_share() {
+                    this.#calc_one_share();
+                    return this.#one_share;
+                }
+
+                //return the table of weights; get method added for consistency with private vars
+                get weights() {
+                    return this.weights;
+                }
+
+                //calculate and return the co-op's ammount
+                get coop_weights() {
+                    this.#calc_coop_weights();
+                    return this.#coop_weights;
+                }
+            }
+
+            //initialize a ProduceWeight instance and reveal the weight entry form
+            function launch() {
+                local_store_object(
+                    'pw' ,
+                    new ProduceWeight(document.getElementById('n_shares').value ,
+                                    document.getElementById('n_coop_shares').value)
+                );
+                document.getElementById('additem').style.display='block';
+                document.getElementById('toggles').style.display='block';
+                document.getElementById('n_shares').value = document.getElementById('n_shares').value + ' total shares';
+                document.getElementById('n_coop_shares').value = document.getElementById('n_coop_shares').value + ' reserved for co-op';
+                document.getElementById('n_shares').disabled = true;
+                document.getElementById('n_coop_shares').disabled = true;
+                document.getElementById('launch_button').style.display = 'none';
+            }
+
+            //stringify and local-storage a JSON object
+            function local_store_object(name , object){
+                localStorage.setItem(name , JSON.stringify(object));
+            }
+
+            //load from local storage and parse a stringified JSON object
+            function local_get_object(name) {
+                let obj = JSON.parse(localStorage.getItem(name));
+                return new ProduceWeight(obj.n_shares , obj.n_coop_shares , obj.weights);
+            }
+
+            //collect a user's entry from the produce weight form; append to the ProduceWeight in local storage, and clear form
+            function add() {
+                let obj = JSON.parse(localStorage.getItem("pw"));
+                let my_pw = new ProduceWeight(obj.n_shares , obj.n_coop_shares , obj.weights);
+                my_pw.add_entry(document.getElementById("veg").value , parseFloat(document.getElementById("mass").value));
+                document.getElementById("veg").value = 'Variety';
+                document.getElementById("mass").value = 'Weight';
+                local_store_object('pw' , my_pw);
+                display_running(my_pw.weights);
+            }
+
+            //display an HTML table of the JSON object obj on the page
+            function display_running(obj){
+                document.getElementById("running").innerHTML = '';
+                document.getElementById("running").appendChild(jsonToTable(obj));
+            }
+
+            //toggle between displaying total weight, one share weight, or co-op weight in running table
+            function toggle(which) {
+                let obj = JSON.parse(localStorage.getItem("pw"));
+                let my_pw = new ProduceWeight(obj.n_shares , obj.n_coop_shares , obj.weights);
+                switch(which) {
+                    case "coop":
+                        display_running(my_pw.coop_weights);
+                        document.getElementById("toggle_coop").disabled = true;
+                        document.getElementById("toggle_share").disabled = false;
+                        document.getElementById("toggle_total").disabled = false;
+                    break;
+                    case "share":
+                        display_running(my_pw.one_share);
+                        document.getElementById("toggle_coop").disabled = false;
+                        document.getElementById("toggle_share").disabled = true;
+                        document.getElementById("toggle_total").disabled = false;
+                    break;
+                    default:
+                        display_running(my_pw.weights);
+                        document.getElementById("toggle_coop").disabled = false;
+                        document.getElementById("toggle_share").disabled = false;
+                        document.getElementById("toggle_total").disabled = true;
+                    break;
+                }
+            }
+
+            //HTML-ify a json table
+            function jsonToTable(jsonObject) {
+                const table = document.createElement('table');
+                
+                const headerRow = document.createElement('tr');
+                const headerItem = document.createElement('th');
+                headerItem.textContent = 'Item';
+                const headerWeight = document.createElement('th');
+                headerWeight.textContent = 'Weight';
+                headerRow.appendChild(headerItem);
+                headerRow.appendChild(headerWeight);
+                table.appendChild(headerRow);
+                
+                for (const [item, weight] of Object.entries(jsonObject)) {
+                    const row = document.createElement('tr');
+                    const cellItem = document.createElement('td');
+                    cellItem.textContent = item;
+                    const cellWeight = document.createElement('td');
+                    cellWeight.textContent = weight;
+                    row.appendChild(cellItem);
+                    row.appendChild(cellWeight);
+                    table.appendChild(row);
+                }
+                
+                return table;
+            }
+
+            //add a row of named radio buttons to the running table for help with merging
+            function addRadioButtonsToTable(table) {
+                const tbl = document.getElementById('running').querySelector('table');
+                for (let i = 1; i < tbl.rows.length; i++) {
+                    const row = tbl.rows[i];
+                    const cellRadio = document.createElement('td');
+                    
+                    const radioButton = document.createElement('input');
+                    radioButton.type = 'checkbox';
+                    radioButton.name = row.cells[0].textContent;
+                    
+                    cellRadio.appendChild(radioButton);
+                    row.appendChild(cellRadio);
+                }
+                document.getElementById('do_merge').style.display='block';
+            }
+
+            //identify which radio buttons are selected and use the merge() function in ProduceWeight to merge them
+            function merge() {
+                inputs = document.getElementsByTagName("input");
+                to_merge = [];
+                for(let i = 0 ; i < inputs.length ; i++) {
+                    if(inputs[i].type == 'checkbox') {
+                        if(inputs[i].checked) {
+                            to_merge.push(inputs[i].name);
+                        }
+                    }
+                }
+                let obj = local_get_object('pw');
+                let my_pw = new ProduceWeight(obj.n_shares , obj.n_coop_shares , obj.weights);
+                my_pw.merge(to_merge);
+                local_store_object('pw' , my_pw);
+                toggle('total');
+                document.getElementById('do_merge').style.display='none';
+            }
+
+            //clear local storage and reload page
+            function reset() {
+                localStorage.clear();
+                location.reload();
+            }
+
+            //helper event listeners to get rid of the forms and just show the running table upon command-P
+            addEventListener("beforeprint", (event) => {
+                document.getElementById("above_table").style.display = "none";
+                document.getElementById("toggles").style.display = "none";
+            })
+
+            addEventListener("afterprint", (event) => {
+                document.getElementById("above_table").style.display = "block";
+                document.getElementById("toggles").style.display = "block";
+            })
+
+            //write today's date on the page
+            function set_date() {
+                n =  new Date();
+                y = n.getFullYear();
+                m = n.getMonth() + 1;
+                d = n.getDate();
+                console.log(m + "/" + d + "/" + y)
+                document.getElementById("date").innerHTML = m + "/" + d + "/" + y;
+            }
+        </script>
+    </head>
+    <body onload="set_date()">
+            <table>
+                <tr>
+                    <td><img src = './static/WG-logo-round.webp'></td>
+                    <td><b>Welcome Garden Harvest</b><br><div id = 'date'></div></td>
+                </tr>
+            </table>
+        <div id = "above_table">
+            <form onsubmit="return false;" method = "post" name = "setup" id = "setup">
+                <input type = "text" id = "n_shares" value = "# CSA shares" onclick = "document.getElementById('n_shares').value = ''"><br>
+                <input type = "text" id = "n_coop_shares" value = "# co-op shares" onclick = "document.getElementById('n_coop_shares').value = ''"><br>
+                <input type = "submit" value = "Start Weighing" onclick = "launch()" id = "launch_button">
+            </form>
+
+            <div id = "additem" style = "display: none;">
+                <form onsubmit = "return false;" method = "post" name = "additem">
+                    <input type = "text" id = "veg" value = "Variety" onclick = "document.getElementById('veg').value = ''">
+                    <input type = "text" id = "mass" value = "Weight" onclick = "document.getElementById('mass').value = ''">
+                    <input type = "submit" value = "Add" onclick = "add();">
+                </form>
+            </div>
+        </div>
+
+        <div id = "running"></div>
+        <button onclick = "merge()" style = "display: none;" id = "do_merge">Merge!</button>
+        <br>
+        <div id = "toggles" style = "display : none">
+            <button onclick = "toggle('share')" id = "toggle_share">Per-Share</button>
+            <button onclick = "toggle('coop')" id = "toggle_coop">Co-Op</button>
+            <button onclick = "toggle('total')" id = "toggle_total" disabled>Total</button>
+            <select>
+                <option value = "Options">Options</option>
+                <option value = "Print" onclick = "print()">Print</option>
+                <option value = "Reset" onclick = "reset()">Reset</option>
+                <option value = "Merge" onclick = "addRadioButtonsToTable()">Merge</option>
+            </select>
+        </div>
+    </body>
+</html>
