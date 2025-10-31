@@ -5,12 +5,12 @@
         </title>
         <script>
             class ProduceWeight {
-
-                weights;
-                n_shares;
-                n_coop_shares;
-                #one_share;
-                #coop_weights;
+                //class to manage an object representing the current table of produce weights and helper methods for table transormations
+                weights;//obj of variety:weight pairs
+                n_shares;//how many csa shares total
+                n_coop_shares;//how many shares diverted to co-op
+                #one_share;//private; obj containing weights divided by n shares
+                #coop_weights;//private; obj containing weights divided by n shares times number of coop shares
 
                 constructor(n_shares , n_coop_shares , weights = {}) {
                     this.weights = weights;
@@ -20,6 +20,7 @@
                     this.n_coop_shares = n_coop_shares;
                 }
                 
+                //log a new box that you just weighed and append
                 add_entry(veg , mass) {
                     if(veg in this.weights) {
                         this.weights[veg] = this.weights[veg] + mass;
@@ -29,13 +30,14 @@
                     }
                 }
 
-
+                //compute how much one share should be
                 #calc_one_share() {
                     for (const [key, value] of Object.entries(this.weights)) {
                         this.#one_share[key] = (value / this.n_shares).toFixed(1);
                     }
                 }
 
+                //compute total weight to give to co-op
                 #calc_coop_weights() {
                     this.#calc_one_share()
                     for (const [key, value] of Object.entries(this.#one_share)) {
@@ -43,6 +45,7 @@
                     }
                 }
 
+                //merge >= 2 different produce entries into a single combined row
                 merge(rows) {
                     let merged_weight = 0;
                     let merged_name = ""
@@ -54,21 +57,25 @@
                     this.weights[merged_name.substring(3)] = merged_weight;
                 }
 
+                //calculate and return one share's amounts
                 get one_share() {
                     this.#calc_one_share();
                     return this.#one_share;
                 }
 
+                //return the table of weights; get method added for consistency with private vars
                 get weights() {
                     return this.weights;
                 }
 
+                //calculate and return the co-op's ammount
                 get coop_weights() {
                     this.#calc_coop_weights();
                     return this.#coop_weights;
                 }
             }
 
+            //initialize a ProduceWeight instance and reveal the weight entry form
             function launch() {
                 local_store_object(
                     'pw' ,
@@ -81,31 +88,35 @@
                 document.getElementById('n_coop_shares').disabled = true;
             }
 
+            //stringify and local-storage a JSON object
             function local_store_object(name , object){
                 localStorage.setItem(name , JSON.stringify(object));
             }
 
+            //load from local storage and parse a stringified JSON object
             function local_get_object(name) {
                 let obj = JSON.parse(localStorage.getItem(name));
                 return new ProduceWeight(obj.n_shares , obj.n_coop_shares , obj.weights);
             }
 
+            //collect a user's entry from the produce weight form; append to the ProduceWeight in local storage, and clear form
             function add() {
                 let obj = JSON.parse(localStorage.getItem("pw"));
                 let my_pw = new ProduceWeight(obj.n_shares , obj.n_coop_shares , obj.weights);
                 my_pw.add_entry(document.getElementById("veg").value , parseFloat(document.getElementById("mass").value));
-                document.getElementById("veg").value = '';
-                document.getElementById("mass").value = '';
+                document.getElementById("veg").value = 'Variety';
+                document.getElementById("mass").value = 'Weight';
                 local_store_object('pw' , my_pw);
                 display_running(my_pw.weights);
             }
 
+            //display an HTML table of the JSON object obj on the page
             function display_running(obj){
                 document.getElementById("running").innerHTML = '';
                 document.getElementById("running").appendChild(jsonToTable(obj));
             }
 
-
+            //toggle between displaying total weight, one share weight, or co-op weight in running table
             function toggle(which) {
                 let obj = JSON.parse(localStorage.getItem("pw"));
                 let my_pw = new ProduceWeight(obj.n_shares , obj.n_coop_shares , obj.weights);
@@ -131,6 +142,7 @@
                 }
             }
 
+            //HTML-ify a json table
             function jsonToTable(jsonObject) {
                 const table = document.createElement('table');
                 
@@ -157,6 +169,7 @@
                 return table;
             }
 
+            //add a row of named radio buttons to the running table for help with merging
             function addRadioButtonsToTable(table) {
                 const tbl = document.getElementById('running').querySelector('table');
                 for (let i = 1; i < tbl.rows.length; i++) {
@@ -173,6 +186,7 @@
                 document.getElementById('do_merge').style.display='block';
             }
 
+            //identify which radio buttons are selected and use the merge() function in ProduceWeight to merge them
             function merge() {
                 inputs = document.getElementsByTagName("input");
                 to_merge = [];
@@ -191,12 +205,13 @@
                 document.getElementById('do_merge').style.display='none';
             }
 
-
+            //clear local storage and reload page
             function reset() {
                 localStorage.clear();
                 location.reload();
             }
 
+            //helper event listeners to get rid of the forms and just show the running table upon command-P
             addEventListener("beforeprint", (event) => {
                 document.getElementById("above_table").style.display = "none";
                 document.getElementById("toggles").style.display = "none";
