@@ -221,9 +221,25 @@
                 document.getElementById("above_table").style.display = "block";
                 document.getElementById("toggles").style.display = "block";
             })
+
+            //write today's date on the page
+            function set_date() {
+                n =  new Date();
+                y = n.getFullYear();
+                m = n.getMonth() + 1;
+                d = n.getDate();
+                console.log(m + "/" + d + "/" + y)
+                document.getElementById("date").innerHTML = m + "/" + d + "/" + y;
+            }
         </script>
     </head>
-    <body>
+    <body onload="set_date()">
+            <table>
+                <tr>
+                    <td><img src = './static/WG-logo-round.webp'></td>
+                    <td><b>Welcome Garden Harvest</b><br><div id = 'date'></div></td>
+                </tr>
+            </table>
         <div id = "above_table">
             <form onsubmit="return false;" method = "post" name = "setup" id = "setup">
                 <input type = "text" id = "n_shares" value = "# CSA shares" onclick = "document.getElementById('n_shares').value = ''"><br>
