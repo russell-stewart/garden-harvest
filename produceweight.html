@@ -84,8 +84,11 @@
                 );
                 document.getElementById('additem').style.display='block';
                 document.getElementById('toggles').style.display='block';
+                document.getElementById('n_shares').value = document.getElementById('n_shares').value + ' total shares';
+                document.getElementById('n_coop_shares').value = document.getElementById('n_coop_shares').value + ' reserved for co-op';
                 document.getElementById('n_shares').disabled = true;
                 document.getElementById('n_coop_shares').disabled = true;
+                document.getElementById('launch_button').style.display = 'none';
             }
 
             //stringify and local-storage a JSON object
@@ -244,7 +247,7 @@
             <form onsubmit="return false;" method = "post" name = "setup" id = "setup">
                 <input type = "text" id = "n_shares" value = "# CSA shares" onclick = "document.getElementById('n_shares').value = ''"><br>
                 <input type = "text" id = "n_coop_shares" value = "# co-op shares" onclick = "document.getElementById('n_coop_shares').value = ''"><br>
-                <input type = "submit" value = "Start Weighing" onclick = "launch()">
+                <input type = "submit" value = "Start Weighing" onclick = "launch()" id = "launch_button">
             </form>
 
             <div id = "additem" style = "display: none;">
