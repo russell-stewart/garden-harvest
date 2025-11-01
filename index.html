@@ -235,6 +235,24 @@
                 console.log(m + "/" + d + "/" + y)
                 document.getElementById("date").innerHTML = m + "/" + d + "/" + y;
             }
+
+            //handle dropdown menu clicks or taps
+            function checkChange(event) {
+                switch(event.target.value) {
+                    case 'Print':
+                        print()
+                    break;
+                    case 'Reset':
+                        reset()
+                    break;
+                    case 'Merge':
+                        addRadioButtonsToTable()
+                    break;
+                    default:
+                        pass;
+                    break;
+                }
+            }
         </script>
     </head>
     <body onload="set_date()">
@@ -267,11 +285,11 @@
             <button onclick = "toggle('share')" id = "toggle_share">Per-Share</button>
             <button onclick = "toggle('coop')" id = "toggle_coop">Co-Op</button>
             <button onclick = "toggle('total')" id = "toggle_total" disabled>Total</button>
-            <select>
+            <select onchange = "checkChange(event)">
                 <option value = "Options">Options</option>
-                <option value = "Print" onclick = "print()">Print</option>
-                <option value = "Reset" onclick = "reset()">Reset</option>
-                <option value = "Merge" onclick = "addRadioButtonsToTable()">Merge</option>
+                <option value = "Print">Print</option>
+                <option value = "Reset">Reset</option>
+                <option value = "Merge">Merge</option>
             </select>
         </div>
     </body>
