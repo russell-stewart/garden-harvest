@@ -5,14 +5,14 @@ layout: home
 <!DOCTYPE html>
 <html lang="en">
     <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ '/assets/main.css' | relative_url }}">
-    <link rel="stylesheet" href="{{ '/assets/custom.css' | relative_url }}">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        {%- seo -%}
+        <link rel="stylesheet" href="{{ "/assets/main.css" | relative_url }}">
         <title>
             Welcome Garden Produce Weight Calculator
         </title>
-        <link rel="stylesheet" type="text/css" href="{{ "/assets/css/main.css" | relative_url }}">
         <script>
             class ProduceWeight {
                 //class to manage an object representing the current table of produce weights and helper methods for table transormations
@@ -265,13 +265,14 @@ layout: home
         </script>
     </head>
     <body onload="set_date()">
-            {% include home.html %}
-            <table>
-                <tr>
-                    <td><img src = './static/WG-logo-round.webp'></td>
-                    <td><b>Welcome Garden Harvest</b><br><div id = 'date'></div></td>
-                </tr>
-            </table>
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <table>
+            <tr>
+                <td><img src = './static/WG-logo-round.webp'></td>
+                <td><b>Welcome Garden Harvest</b><br><div id = 'date'></div></td>
+            </tr>
+        </table>
         <div id = "above_table">
             <form onsubmit="return false;" method = "post" name = "setup" id = "setup">
                 <input type = "text" id = "n_shares" value = "# CSA shares" onclick = "document.getElementById('n_shares').value = ''"><br>
@@ -302,5 +303,7 @@ layout: home
                 <option value = "Merge">Merge</option>
             </select>
         </div>
+      </div>
+    </main>
     </body>
 </html>
