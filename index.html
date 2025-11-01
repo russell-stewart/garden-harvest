@@ -1,5 +1,14 @@
-<html>
+---
+layout: home
+---
+
+<!DOCTYPE html>
+<html lang="en">
     <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ '/assets/main.css' | relative_url }}">
+    <link rel="stylesheet" href="{{ '/assets/custom.css' | relative_url }}">
         <title>
             Welcome Garden Produce Weight Calculator
         </title>
@@ -256,6 +265,7 @@
         </script>
     </head>
     <body onload="set_date()">
+            {% include home.html %}
             <table>
                 <tr>
                     <td><img src = './static/WG-logo-round.webp'></td>
