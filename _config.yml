@@ -18,10 +18,7 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: Garden Harvest
-email: russells98@gmail.com
-description: >- # this means to ignore newlines until "baseurl:"
-  A small web app for logging CSA farm harvest.
+title: Garden Harvest Calculator
 domain: russell-stewart.github.io
 url: https://russell-stewart.github.io/garden-harvest
 baseurl: "" # the subpath of your site, e.g. /blog
@@ -30,8 +27,7 @@ github_username:  russell-stewart
 
 # Build settings
 theme: minima
-minima:
-  skin: solarized
+skin: solarized
 plugins:
   - jekyll-feed
 

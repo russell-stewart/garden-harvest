@@ -1,5 +1,5 @@
 ---
-layout: home
+layout: default
 ---
 
 <!DOCTYPE html>
@@ -228,12 +228,31 @@ layout: home
             addEventListener("beforeprint", (event) => {
                 document.getElementById("above_table").style.display = "none";
                 document.getElementById("toggles").style.display = "none";
+                document.getElementsByTagName("header")[0].style.display = "none";
+                document.getElementsByTagName("footer")[0].style.display = "none";
             })
 
             addEventListener("afterprint", (event) => {
                 document.getElementById("above_table").style.display = "block";
                 document.getElementById("toggles").style.display = "block";
+                document.getElementsByTagName("header")[0].style.display = "block";
+                document.getElementsByTagName("footer")[0].style.display = "block";
             })
+            function printDiv(divId) {
+                document.getElementById("above_table").style.display = "none";
+                document.getElementById("toggles").style.display = "none";
+                var content = document.getElementById("to_print").innerHTML;
+                var myWindow = window.open('', '', 'width=600,height=800');
+                myWindow.document.write('<html><head><title>Print</title>');
+                myWindow.document.write('<link rel="stylesheet" type="text/css" href="style.css">'); // Optional: Link to CSS
+                myWindow.document.write('</head><body >');
+                myWindow.document.write(content);
+                myWindow.document.write('</body></html>');
+                myWindow.document.close(); // Necessary for IE >= 10
+                myWindow.print();
+                document.getElementById("above_table").style.display = "block";
+                document.getElementById("toggles").style.display = "block";
+            }
 
             //write today's date on the page
             function set_date() {
@@ -265,12 +284,12 @@ layout: home
         </script>
     </head>
     <body onload="set_date()">
-    <main class="page-content" aria-label="Content">
+    <main class="page-content" aria-label="Content" id = "to_print">
       <div class="wrapper">
         <table>
             <tr>
                 <td><img src = './static/WG-logo-round.webp'></td>
-                <td><b>Welcome Garden Harvest</b><br><div id = 'date'></div></td>
+                <td><h1>Harvest Log</h1><br><h2><div id = 'date'></div></h2></td>
             </tr>
         </table>
         <div id = "above_table">
