@@ -27,7 +27,7 @@ github_username:  russell-stewart
 
 # Build settings
 theme: minima
-skin: solarized
+
 plugins:
   - jekyll-feed
 
