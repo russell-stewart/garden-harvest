@@ -5,11 +5,24 @@
 //input stuff written by russell
 input,
 select,
-textarea {margin-bottom:10px; font: 400 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; color:#111; border: none; padding: 0 10px; background: #f6f6f6;}
+textarea {margin-bottom:10px; font: 400 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; color:#111; border: none; padding: 0 10px; background: #f6f6f6;
+  transition:background-color 0.25s;
+  &:hover{
+    background: #f0f0f0;
+  }
+  &:active{
+    background: #d0d0d0;
+  }}
 
 button,
 input[type="submit"],
-select {font: 400 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; font-style: italic ; color:#111; border: none; padding: 0 10px; margin: auto; background: #e6e6e6;}
+select {font: 400 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; font-style: italic ; color:#111; border: none; padding: 0 10px; margin: auto; background: #e6e6e6;
+&:hover{
+  background:#d0d0d0;
+}
+&:active{
+  background:#b0b0b0;
+}}
 
 
 /** Reset some basic elements */
