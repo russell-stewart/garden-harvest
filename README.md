@@ -16,3 +16,5 @@
     - **Caution: Any pushes to this branch launch a rebuild of the Jekyll app.**
 ## Testing locally on your device
 - Reference [the github pages docs](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/testing-your-github-pages-site-locally-with-jekyll)
+## Issues
+- See the "Issues" page in Github!
