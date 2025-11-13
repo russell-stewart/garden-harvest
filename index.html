@@ -12,75 +12,126 @@ layout: default
         <title>
             Welcome Garden Produce Weight Calculator
         </title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.3.2/math.js"></script> 
         <script>
             class ProduceWeight {
                 //class to manage an object representing the current table of produce weights and helper methods for table transormations
-                weights;//obj of variety:weight pairs
+                _weights;//array of weights, unmerged; parallel to varieties
+                _varieties;//array of varieties, unmerged; parralel to weights
+                _merge_matrix;//SparseMatrix to store which entries in varieties should be merged to produce the merged weight list.
+                _merged_varieties;//array of variety names after merging
                 n_shares;//how many csa shares total
                 n_coop_shares;//how many shares diverted to co-op
-                #one_share;//private; obj containing weights divided by n shares
-                #coop_weights;//private; obj containing weights divided by n shares times number of coop shares
+                _one_share;//private; array containing weights divided by n shares
+                _coop_weights;//private; array containing weights divided by n shares times number of coop shares
 
-                constructor(n_shares , n_coop_shares , weights = {}) {
-                    this.weights = weights;
-                    this.#one_share = {};
-                    this.#coop_weights = {};
+                constructor(n_shares , n_coop_shares , weights = [] , varieties = [] , merge_matrix = math.matrix([[1]],'sparse') , merged_varieties = []) {
+                    this._weights = weights;
+                    this._varieties = varieties;
+                    this._merge_matrix = merge_matrix;
+                    this._merged_varieties = merged_varieties;
+                    this._one_share = [];
+                    this._coop_weights = [];
                     this.n_shares = n_shares;
                     this.n_coop_shares = n_coop_shares;
                 }
                 
-                //log a new box that you just weighed and append
+                //log a new box that you just weighed
                 add_entry(veg , mass) {
-                    if(veg in this.weights) {
-                        this.weights[veg] = this.weights[veg] + mass;
-                    }
-                    else {
-                        this.weights[veg] = mass;
+                    if(veg in this._varieties) {//we already have a row
+                        this._weights[this._varieties.indexOf(veg)] += mass;
+                    } else {//append a new rows
+                        this._varieties[this._varieties.length] = veg;
+                        this._weights[this._weights.length] = mass;
+                        console.log('we got here');
+                        if(this._merged_varieties.length > 0) {
+                            this._merge_matrix.set([this._merge_matrix.size()[0] , this._merge_matrix.size()[1]] , 1);
+                        }
+                        this._merged_varieties[this._merged_varieties.length] = veg;
                     }
                 }
 
                 //compute how much one share should be
-                #calc_one_share() {
-                    for (const [key, value] of Object.entries(this.weights)) {
-                        this.#one_share[key] = (value / this.n_shares).toFixed(1);
-                    }
+                _calc_one_share() {
+                    this._one_share = this._merged_weights().map((w) => (w / this.n_shares).toFixed(1));
                 }
 
                 //compute total weight to give to co-op
-                #calc_coop_weights() {
-                    this.#calc_one_share()
-                    for (const [key, value] of Object.entries(this.#one_share)) {
-                        this.#coop_weights[key] = (value * this.n_coop_shares).toFixed(1);
-                    }
+                _calc_coop_weights() {
+                    this._calc_one_share();
+                    this._coop_weights = this._one_share.map(o => (o * this.n_coop_shares).toFixed(1));
                 }
 
-                //merge >= 2 different produce entries into a single combined row
+                //update the merge matrix to merge two or more rows (string names of varieties) together
                 merge(rows) {
-                    let merged_weight = 0;
-                    let merged_name = ""
-                    rows.forEach(row => {
-                        merged_weight += this.weights[row];
-                        merged_name = merged_name + " or " + row;
-                        delete this.weights[row];
-                    });
-                    this.weights[merged_name.substring(3)] = merged_weight;
+                    //identify the index of all rows to merge, sum those rows, and append a new merge matrix of the
+                    //unaffected rows plus this new merged row at the bottom
+                    const row_indices = rows.map((r) => this._varieties.indexOf(r));
+                    const to_merge = row_indices.map(
+                        (r => math.row(
+                            this._merge_matrix , r)));
+                    const merged_row = math.sum(to_merge);
+                    const preserved_indices = math.filter(
+                        math.range(
+                            0 , this._weights.length) ,(r) => (!(r in row_indices)));
+                    const preserved = math.concat(
+                        preserved_indices.map(
+                            (r) => math.squeeze(
+                                math.row(this._merge_matrix , r))));
+                    this._merge_matrix = math.sparse(math.concat(preserved , merged_row));
+
+                    //make an array parallel to the zeroth dimension of the merge matrix with merged row names
+                    const preserved_varieties = preserved_indices.map(
+                        i => this._varieties[i]
+                    ).valueOf();
+                    const smerged_variety = row_indices.map(
+                        i => this._merged_varieties[i]).reduce(
+                            (accumulator , currentValue) => accumulator + 'or' + currentValue);
+                    this._merged_varieties = preserved_varieties;
+                    this._merged_varieties.push(this._merged_varieties);
+                }
+s
+                //matrix transform the unmerged weight table into the merged weight table
+                _merged_weights() {
+                    return math.flatten(
+                        math.matrix(
+                            math.multiply(
+                                this._merge_matrix ,
+                                math.reshape(math.matrix(this._weights) , [this._weights.length,1])
+                            ) ,
+                            'dense'
+                        )
+                    ).valueOf();
                 }
 
-                //calculate and return one share's amounts
+                //calculate and return one share's amounts as a json of {variety:weight}
                 get one_share() {
-                    this.#calc_one_share();
-                    return this.#one_share;
+                    this._calc_one_share();
+                    return this._json_zip(this._varieties , this._one_share);
                 }
 
-                //return the table of weights; get method added for consistency with private vars
+                //private function to zip two parallel arrays into a json of {arr1:arr2}
+                _json_zip(arr1 , arr2) {
+                    return arr1.reduce((obj , a1 , i) => {
+                        obj[a1] = arr2[i];
+                        return obj;
+                    },{});
+                }
+
+                //return a JSON object of {variety:weight}. by default, this will be merged
                 get weights() {
-                    return this.weights;
+                    return this._json_zip(this._merged_varieties , this._merged_weights());
                 }
 
-                //calculate and return the co-op's ammount
+                //return a JSON object of {variety:weight} but always the unmerged
+                get_unmerged_weights() {
+                    return this._json_zip(this._varieties , this._weights);
+                }
+
+                //calculate and return the co-op's ammount as a json of {variety:weight}
                 get coop_weights() {
-                    this.#calc_coop_weights();
-                    return this.#coop_weights;
+                    this._calc_coop_weights();
+                    return this._json_zip(this._merged_varieties , this._coop_weights);
                 }
             }
 
@@ -114,7 +165,9 @@ layout: default
             //collect a user's entry from the produce weight form; append to the ProduceWeight in local storage, and clear form
             function add() {
                 let obj = JSON.parse(localStorage.getItem("pw"));
+                console.log('add launched');
                 let my_pw = new ProduceWeight(obj.n_shares , obj.n_coop_shares , obj.weights);
+                console.log('ProduceWeight initialized');
                 my_pw.add_entry(document.getElementById("veg").value , parseFloat(document.getElementById("mass").value));
                 document.getElementById("veg").value = 'Variety';
                 document.getElementById("mass").value = 'Weight';
