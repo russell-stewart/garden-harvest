@@ -94,7 +94,7 @@ s
                         math.matrix(
                             math.multiply(
                                 this._merge_matrix ,
-                                this._weights
+                                math.matrix(this._weights)
                             ) ,
                             'dense'
                         )
@@ -130,6 +130,19 @@ s
                     this._calc_coop_weights();
                     return this._json_zip(this._merged_varieties , this.#coop_weights);
                 }
+
+                //serialize into JSON without adding in unhelpful math.js objects
+                toJSON() {
+                    console.log('running my own jsonify');
+                    return {
+                        '_weights': this._weights ,
+                        '_varieties' : this._varieties ,
+                        '_merge_matrix' : this._merge_matrix.valueOf() ,
+                        '_merged_varieties' : this._merged_varieties ,
+                        'n_shares' : this.n_shares ,
+                        'n_coop_shares' : this.n_coop_shares ,
+                    }
+                }
             }
 
             //initialize a ProduceWeight instance and reveal the weight entry form
@@ -156,14 +169,22 @@ s
             //load from local storage and parse a stringified JSON object
             function local_get_object(name) {
                 let obj = JSON.parse(localStorage.getItem(name));
-                return new ProduceWeight(obj.n_shares , obj.n_coop_shares , obj.weights);
+
+                return new ProduceWeight(parseFloat(obj.n_shares) ,
+                    parseFloat(obj.n_coop_shares) ,
+                    obj._weights ,
+                    obj._varieties ,
+                    math.matrix(obj._merge_matrix , 'sparse') ,
+                    obj._merged_varieties ,
+                    );
             }
 
             //collect a user's entry from the produce weight form; append to the ProduceWeight in local storage, and clear form
             function add() {
-                let obj = JSON.parse(localStorage.getItem("pw"));
-                let my_pw = new ProduceWeight(obj.n_shares , obj.n_coop_shares , obj.weights);
+                let my_pw = local_get_object('pw');
+                console.log(local_get_object('pw'));
                 my_pw.add_entry(document.getElementById("veg").value , parseFloat(document.getElementById("mass").value));
+                console.log(my_pw);
                 document.getElementById("veg").value = 'Variety';
                 document.getElementById("mass").value = 'Weight';
                 local_store_object('pw' , my_pw);
