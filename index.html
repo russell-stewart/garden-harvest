@@ -22,16 +22,16 @@ layout: default
                 _merged_varieties;//array of variety names after merging
                 n_shares;//how many csa shares total
                 n_coop_shares;//how many shares diverted to co-op
-                _one_share;//private; array containing weights divided by n shares
-                _coop_weights;//private; array containing weights divided by n shares times number of coop shares
+                #one_share;//private; array containing weights divided by n shares
+                #coop_weights;//private; array containing weights divided by n shares times number of coop shares
 
                 constructor(n_shares , n_coop_shares , weights = [] , varieties = [] , merge_matrix = math.matrix([[1]],'sparse') , merged_varieties = []) {
                     this._weights = weights;
                     this._varieties = varieties;
                     this._merge_matrix = merge_matrix;
                     this._merged_varieties = merged_varieties;
-                    this._one_share = [];
-                    this._coop_weights = [];
+                    this.#one_share = [];
+                    this.#coop_weights = [];
                     this.n_shares = n_shares;
                     this.n_coop_shares = n_coop_shares;
                 }
@@ -52,13 +52,13 @@ layout: default
 
                 //compute how much one share should be
                 _calc_one_share() {
-                    this._one_share = this._merged_weights().map((w) => (w / this.n_shares).toFixed(1));
+                    this.#one_share = this._merged_weights().map((w) => (w / this.n_shares).toFixed(1));
                 }
 
                 //compute total weight to give to co-op
                 _calc_coop_weights() {
                     this._calc_one_share();
-                    this._coop_weights = this._one_share.map(o => (o * this.n_coop_shares).toFixed(1));
+                    this.#coop_weights = this.#one_share.map(o => (o * this.n_coop_shares).toFixed(1));
                 }
 
                 //update the merge matrix to merge two or more rows (string names of varieties) together
@@ -104,7 +104,7 @@ s
                 //calculate and return one share's amounts as a json of {variety:weight}
                 get one_share() {
                     this._calc_one_share();
-                    return this._json_zip(this._merged_varieties , this._one_share);
+                    return this._json_zip(this._merged_varieties , this.#one_share);
                 }
 
                 //private function to zip two parallel arrays into a json of {arr1:arr2}
@@ -128,7 +128,7 @@ s
                 //calculate and return the co-op's ammount as a json of {variety:weight}
                 get coop_weights() {
                     this._calc_coop_weights();
-                    return this._json_zip(this._merged_varieties , this._coop_weights);
+                    return this._json_zip(this._merged_varieties , this.#coop_weights);
                 }
             }
 
