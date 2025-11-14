@@ -38,16 +38,15 @@ layout: default
                 
                 //log a new box that you just weighed
                 add_entry(veg , mass) {
-                    if(veg in this._varieties) {//we already have a row
+                    if(this._varieties.indexOf(veg) >= 0) {//we already have a row
                         this._weights[this._varieties.indexOf(veg)] += mass;
                     } else {//append a new rows
-                        this._varieties[this._varieties.length] = veg;
-                        this._weights[this._weights.length] = mass;
-                        console.log('we got here');
+                        this._varieties.push(veg);
+                        this._weights.push(mass);
                         if(this._merged_varieties.length > 0) {
                             this._merge_matrix.set([this._merge_matrix.size()[0] , this._merge_matrix.size()[1]] , 1);
                         }
-                        this._merged_varieties[this._merged_varieties.length] = veg;
+                        this._merged_varieties.push(veg);
                     }
                 }
 
@@ -71,24 +70,22 @@ layout: default
                         (r => math.row(
                             this._merge_matrix , r)));
                     const merged_row = math.sum(to_merge);
-                    const preserved_indices = math.filter(
-                        math.range(
-                            0 , this._weights.length) ,(r) => (!(r in row_indices)));
-                    const preserved = math.concat(
-                        preserved_indices.map(
-                            (r) => math.squeeze(
-                                math.row(this._merge_matrix , r))));
-                    this._merge_matrix = math.sparse(math.concat(preserved , merged_row));
-
+                    const preserved_indices = Array.from({ length: this._weights.length }, (_, i) => i).filter(i => !row_indices.includes(i));
+                    const preserved = math.matrix(
+                        math.concat(
+                            preserved_indices.map(
+                                (r) => math.squeeze(
+                                    math.row(this._merge_matrix , r).valueOf()))));
+                    this._merge_matrix = math.matrix(math.concat(preserved , merged_row , 0),'sparse');
                     //make an array parallel to the zeroth dimension of the merge matrix with merged row names
                     const preserved_varieties = preserved_indices.map(
                         i => this._varieties[i]
                     ).valueOf();
-                    const smerged_variety = row_indices.map(
+                    const merged_variety = row_indices.map(
                         i => this._merged_varieties[i]).reduce(
-                            (accumulator , currentValue) => accumulator + 'or' + currentValue);
+                            (accumulator , currentValue) => accumulator + ' or ' + currentValue);
                     this._merged_varieties = preserved_varieties;
-                    this._merged_varieties.push(this._merged_varieties);
+                    this._merged_varieties.push(merged_variety);
                 }
 s
                 //matrix transform the unmerged weight table into the merged weight table
@@ -97,7 +94,7 @@ s
                         math.matrix(
                             math.multiply(
                                 this._merge_matrix ,
-                                math.reshape(math.matrix(this._weights) , [this._weights.length,1])
+                                this._weights
                             ) ,
                             'dense'
                         )
@@ -107,7 +104,7 @@ s
                 //calculate and return one share's amounts as a json of {variety:weight}
                 get one_share() {
                     this._calc_one_share();
-                    return this._json_zip(this._varieties , this._one_share);
+                    return this._json_zip(this._merged_varieties , this._one_share);
                 }
 
                 //private function to zip two parallel arrays into a json of {arr1:arr2}
@@ -165,9 +162,7 @@ s
             //collect a user's entry from the produce weight form; append to the ProduceWeight in local storage, and clear form
             function add() {
                 let obj = JSON.parse(localStorage.getItem("pw"));
-                console.log('add launched');
                 let my_pw = new ProduceWeight(obj.n_shares , obj.n_coop_shares , obj.weights);
-                console.log('ProduceWeight initialized');
                 my_pw.add_entry(document.getElementById("veg").value , parseFloat(document.getElementById("mass").value));
                 document.getElementById("veg").value = 'Variety';
                 document.getElementById("mass").value = 'Weight';
@@ -312,7 +307,6 @@ s
                 y = n.getFullYear();
                 m = n.getMonth() + 1;
                 d = n.getDate();
-                console.log(m + "/" + d + "/" + y)
                 document.getElementById("date").innerHTML = m + "/" + d + "/" + y;
             }
 
