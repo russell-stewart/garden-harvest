@@ -185,7 +185,8 @@ s
                 document.getElementById("veg").value = 'Variety';
                 document.getElementById("mass").value = 'Weight';
                 local_store_object('pw' , my_pw);
-                display_running(my_pw.weights);
+                //display_running(my_pw.weights);
+                toggle('total');
             }
 
             //display an HTML table of the JSON object obj on the page
@@ -197,24 +198,50 @@ s
             //toggle between displaying total weight, one share weight, or co-op weight in running table
             function toggle(which) {
                 let my_pw = local_get_object('pw');
+                have_merged = my_pw._varieties.length > my_pw._merged_varieties.length;
                 switch(which) {
                     case "coop":
                         display_running(my_pw.coop_weights);
                         document.getElementById("toggle_coop").disabled = true;
                         document.getElementById("toggle_share").disabled = false;
                         document.getElementById("toggle_total").disabled = false;
+                        if(have_merged) {
+                            document.getElementById("toggle_unmerge").disabled = false;
+                        } else {
+                            document.getElementById("toggle_unmerge").disabled = true;
+                        }
+                        
                     break;
                     case "share":
                         display_running(my_pw.one_share);
                         document.getElementById("toggle_coop").disabled = false;
                         document.getElementById("toggle_share").disabled = true;
                         document.getElementById("toggle_total").disabled = false;
+                        if(have_merged) {
+                            document.getElementById("toggle_unmerge").disabled = false;
+                        } else {
+                            document.getElementById("toggle_unmerge").disabled = true;
+                        }
+                    break;
+                    case "unmerge":
+                        console.log('we got here');
+                        display_running(my_pw.get_unmerged_weights());
+                        document.getElementById("toggle_unmerge").disabled = true;
+                        document.getElementById("toggle_total").disabled = false;
+                        document.getElementById("toggle_coop").disabled = false;
+                        document.getElementById("toggle_share").disabled = false;
                     break;
                     default:
+                        console.log('default');
                         display_running(my_pw.weights);
                         document.getElementById("toggle_coop").disabled = false;
                         document.getElementById("toggle_share").disabled = false;
                         document.getElementById("toggle_total").disabled = true;
+                        if(have_merged) {
+                            document.getElementById("toggle_unmerge").disabled = false;
+                        } else {
+                            document.getElementById("toggle_unmerge").disabled = true;
+                        }
                     break;
                 }
             }
@@ -279,6 +306,7 @@ s
                 local_store_object('pw' , my_pw);
                 toggle('total');
                 document.getElementById('do_merge').style.display='none';
+                document.getElementById("toggle_unmerge").disabled=false;
             }
 
             //clear local storage and reload page
@@ -376,13 +404,14 @@ s
         <br>
         <div id = "toggles" style = "display : none">
             <button onclick = "toggle('share')" id = "toggle_share">Per-Share</button>
-            <button onclick = "toggle('coop')" id = "toggle_coop">Co-Op</button>
+            <button onclick = "toggle('coop')" id = "toggle_coop" >Co-Op</button>
+            <button onclick = "toggle('unmerge')" id = "toggle_unmerge" disabled>Unmerged</button>
             <button onclick = "toggle('total')" id = "toggle_total" disabled>Total</button>
             <select onchange = "checkChange(event)">
                 <option value = "Options">Options</option>
                 <option value = "Print">Print</option>
-                <option value = "Reset">Reset</option>
                 <option value = "Merge">Merge</option>
+                <option value = "Reset">Reset</option>
             </select>
         </div>
       </div>
