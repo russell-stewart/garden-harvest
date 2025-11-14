@@ -132,15 +132,30 @@ s
                 }
 
                 //serialize into JSON without adding in unhelpful math.js objects
+                //this also stores date iff the field is present for export purposes
                 toJSON() {
-                    return {
-                        '_weights': this._weights ,
-                        '_varieties' : this._varieties ,
-                        '_merge_matrix' : this._merge_matrix.valueOf() ,
-                        '_merged_varieties' : this._merged_varieties ,
-                        'n_shares' : this.n_shares ,
-                        'n_coop_shares' : this.n_coop_shares ,
+                    if(this.date) {
+                        const d_str = this.date.getFullYear() + '/' +  (this.date.getMonth() + 1) + '/' + this.date.getDate();
+                        return {
+                            '_weights': this._weights ,
+                            '_varieties' : this._varieties ,
+                            '_merge_matrix' : this._merge_matrix.valueOf() ,
+                            '_merged_varieties' : this._merged_varieties ,
+                            'n_shares' : this.n_shares ,
+                            'n_coop_shares' : this.n_coop_shares ,
+                            'date' : d_str
+                        }
+                    } else {
+                        return {
+                            '_weights': this._weights ,
+                            '_varieties' : this._varieties ,
+                            '_merge_matrix' : this._merge_matrix.valueOf() ,
+                            '_merged_varieties' : this._merged_varieties ,
+                            'n_shares' : this.n_shares ,
+                            'n_coop_shares' : this.n_coop_shares ,
+                        }
                     }
+                    
                 }
             }
 
@@ -318,6 +333,7 @@ s
             //downloads a JSON file of the current log for the user
             function exportJSON() {
                 let my_pw = local_get_object('pw');
+                my_pw.date = new Date();
                 my_pw_json = JSON.stringify(my_pw);
                 const link = document.createElement("a");
                 const file = new Blob([my_pw_json], { type: 'text/plain' });
