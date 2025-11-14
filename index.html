@@ -315,6 +315,18 @@ s
                 location.reload();
             }
 
+            //downloads a JSON file of the current log for the user
+            function exportJSON() {
+                let my_pw = local_get_object('pw');
+                my_pw_json = JSON.stringify(my_pw);
+                const link = document.createElement("a");
+                const file = new Blob([my_pw_json], { type: 'text/plain' });
+                link.href = URL.createObjectURL(file);
+                link.download = "produceweight.json";
+                link.click();
+                URL.revokeObjectURL(link.href);
+            }
+
             //helper event listeners to get rid of the forms and just show the running table upon command-P
             addEventListener("beforeprint", (event) => {
                 document.getElementById("above_table").style.display = "none";
@@ -364,7 +376,10 @@ s
                         reset()
                     break;
                     case 'Merge':
-                        addRadioButtonsToTable()
+                        addRadioButtonsToTable();
+                    break;
+                    case 'JSON':
+                        exportJSON();
                     break;
                     default:
                         pass;
@@ -409,8 +424,9 @@ s
             <button onclick = "toggle('total')" id = "toggle_total" disabled>Total</button>
             <select onchange = "checkChange(event)">
                 <option value = "Options">Options</option>
-                <option value = "Print">Print</option>
                 <option value = "Merge">Merge</option>
+                <option value = "Print">Print</option>
+                <option value = "JSON">JSON</option>
                 <option value = "Reset">Reset</option>
             </select>
         </div>
