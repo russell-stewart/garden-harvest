@@ -96,9 +96,16 @@ s
                     ).valueOf();
                 }
 
+                //convert a float in pounds to pounds and ounces
+                #to_ounces_and_pounds(mat) {
+                    const lbs = math.floor(mat).valueOf();
+                    const oz = math.floor(math.multiply(16,math.mod(mat,1))).valueOf();
+                    return math.range(0,lbs.length).map((i) => ''+lbs[i]+' lbs. '+oz[i]+' oz.').valueOf();
+                }
+
                 //calculate and return one share's amounts as a json of {variety:weight}
                 get one_share() {
-                    return this._json_zip(this._merged_varieties , this.#calc_one_share());
+                    return this._json_zip(this._merged_varieties , this.#to_ounces_and_pounds(this.#calc_one_share()));
                 }
 
                 //private function to zip two parallel arrays into a json of {arr1:arr2}
@@ -121,7 +128,7 @@ s
 
                 //calculate and return the co-op's ammount as a json of {variety:weight}
                 get coop_weights() {
-                    return this._json_zip(this._merged_varieties , this.#calc_coop_weights());
+                    return this._json_zip(this._merged_varieties , this.#to_ounces_and_pounds(this.#calc_coop_weights()));
                 }
 
                 //serialize into JSON without adding in unhelpful math.js objects
