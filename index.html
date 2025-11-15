@@ -48,12 +48,12 @@ layout: default
 
                 //compute how much one share should be
                 #calc_one_share() {
-                    return this._merged_weights().map((w) => (w / this.n_shares).toFixed(1));
+                    return math.multiply((1.0/this.n_shares) , this._merged_weights());
                 }
 
                 //compute total weight to give to co-op
                 #calc_coop_weights() {
-                    return this.#calc_one_share().map(o => (o * this.n_coop_shares).toFixed(1));
+                    return math.multiply(this.n_coop_shares , this.#calc_one_share());
                 }
 
                 //update the merge matrix to merge two or more rows (string names of varieties) together
