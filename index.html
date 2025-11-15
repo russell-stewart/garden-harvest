@@ -60,12 +60,12 @@ layout: default
                 merge(rows) {
                     //identify the index of all rows to merge, sum those rows, and append a new merge matrix of the
                     //unaffected rows plus this new merged row at the bottom
-                    const row_indices = rows.map((r) => this._varieties.indexOf(r));
+                    const row_indices = rows.map((r) => this._merged_varieties.indexOf(r));
                     const to_merge = row_indices.map(
                         (r => math.row(
                             this._merge_matrix , r)));
                     const merged_row = math.sum(to_merge);
-                    const preserved_indices = Array.from({ length: this._weights.length }, (_, i) => i).filter(i => !row_indices.includes(i));
+                    const preserved_indices = Array.from({ length: this._merged_weights().length }, (_, i) => i).filter(i => !row_indices.includes(i));
                     const preserved = math.matrix(
                         math.concat(
                             preserved_indices.map(
@@ -74,7 +74,7 @@ layout: default
                     this._merge_matrix = math.matrix(math.concat(preserved , merged_row , 0),'sparse');
                     //make an array parallel to the zeroth dimension of the merge matrix with merged row names
                     const preserved_varieties = preserved_indices.map(
-                        i => this._varieties[i]
+                        i => this._merged_varieties[i]
                     ).valueOf();
                     const merged_variety = row_indices.map(
                         i => this._merged_varieties[i]).reduce(
@@ -232,7 +232,6 @@ s
                         }
                     break;
                     case "unmerge":
-                        console.log('we got here');
                         display_running(my_pw.get_unmerged_weights());
                         document.getElementById("toggle_unmerge").disabled = true;
                         document.getElementById("toggle_total").disabled = false;
@@ -240,7 +239,6 @@ s
                         document.getElementById("toggle_share").disabled = false;
                     break;
                     default:
-                        console.log('default');
                         display_running(my_pw.weights);
                         document.getElementById("toggle_coop").disabled = false;
                         document.getElementById("toggle_share").disabled = false;
