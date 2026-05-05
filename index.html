@@ -231,7 +231,7 @@ s
                                 parseFloat(document.getElementById("mass").value),
                                 document.getElementById("unit").value);
                 document.getElementById("veg").value = 'Variety';
-                document.getElementById("mass").value = 'Weight';
+                document.getElementById("mass").value = 'Amount';
                 document.getElementById("unit").value = 'lbs';
                 local_store_object('pw' , my_pw);
                 //display_running(my_pw.weights);
@@ -301,7 +301,7 @@ s
                 const headerItem = document.createElement('th');
                 headerItem.textContent = 'Item';
                 const headerWeight = document.createElement('th');
-                headerWeight.textContent = 'Weight';
+                headerWeight.textContent = 'Amount';
                 headerRow.appendChild(headerItem);
                 headerRow.appendChild(headerWeight);
                 table.appendChild(headerRow);
@@ -460,6 +460,8 @@ s
                     <select name = "unit" id = "unit">
                         <option value = "lbs">lbs</option>
                         <option value = "unitless">unitless</option>
+                        <option value = "dozen">dozen</option>
+                        <option value = "pints">pints</option>
                     </select>
                     <input type = "submit" value = "Add" onclick = "add();">
                 </form>
