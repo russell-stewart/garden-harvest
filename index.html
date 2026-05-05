@@ -132,20 +132,29 @@ s
                     const oz = math.floor(math.multiply(16,math.mod(mat,1))).valueOf();
                     return math.range(0,lbs.length).map((i) => {
                         if(units[i] === 'lbs') {
-                            return ''+lbs[i]+' lbs. '+oz[i]+' oz.';
+                            if (oz[i] > 0) {
+                            return ''+this.#round(lbs[i],0)+' lbs. '+this.#round(oz[i],0)+' oz.';
+                            } else {
+                                return ''+this.#round(lbs[i],0)+' lbs.';
+                            }
                         } else if(units[i] === 'unitless') {
-                            return ''+mat[i];
+                            return ''+this.#round(mat[i]);
                         } else if(units[i] === 'dozen') {
                             const remainder = math.floor(math.mod(math.multiply(mat[i],12),12)).valueOf();
                             if(remainder > 0) {
-                                return ''+(remainder+(12*math.floor(mat[i])));
+                                return ''+this.#round(remainder+(12*math.floor(mat[i])));
                             } else {
-                                return ''+mat[i]+' dozen';
+                                return ''+this.#round(mat[i],0)+' dozen';
                         }
                         } else {
-                            return ''+mat[i] + ' ' + units[i];
+                            return ''+this.#round(mat[i]) + ' ' + units[i];
                         }
                     }).valueOf();
+                }
+
+                //round number to no more than n decimal places
+                #round(num , n=2) {
+                    return math.round(num * math.pow(10,n)) / math.pow(10,n);
                 }
 
                 //calculate and return one share's amounts as a json of {variety:weight}
