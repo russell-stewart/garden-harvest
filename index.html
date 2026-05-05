@@ -71,6 +71,26 @@ layout: default
                     const to_merge = row_indices.map(
                         (r => math.row(
                             this._merge_matrix , r)));
+                    //these will be the new merged row name and consensus row unit
+                    //to append to the list of unmerged row names/units
+                    const merged_variety = row_indices.map(
+                        i => this._merged_varieties[i]).reduce(
+                            (accumulator , currentValue) => accumulator + ' or ' + currentValue);
+                    const merged_unit = row_indices.map(
+                        i=> this._merged_units[i]).reduce(
+                            (accumulator , currentValue) => {
+                                if(accumulator === currentValue) {
+                                    return accumulator;
+                                } else {
+                                    return 'Incompatible Units';
+                                }
+                            }
+                    )
+                    //abort the merge if there are incompatible units
+                    if(merged_unit === 'Incompatible Units') {
+                        alert('Error: Cannot merge rows with incompatible units!');
+                        return;
+                    }
                     const merged_row = math.sum(to_merge);
                     const preserved_indices = Array.from({ length: this._merged_weights().length }, (_, i) => i).filter(i => !row_indices.includes(i));
                     const preserved = math.matrix(
@@ -83,21 +103,14 @@ layout: default
                     const preserved_varieties = preserved_indices.map(
                         i => this._merged_varieties[i]
                     ).valueOf();
-                    const merged_variety = row_indices.map(
-                        i => this._merged_varieties[i]).reduce(
-                            (accumulator , currentValue) => accumulator + ' or ' + currentValue);
-                    const merged_units = row_indices.map(
-                        i=> this._merged_units[i]).reduce(
-                            (accumulator , currentValue) => {
-                                if(accumulator == currentValue) {
-                                    return accumulator;
-                                } else {
-                                    return 'Incompatible Units';
-                                }
-                            }
-                    )
+                    //do the same thing with units
+                    const preserved_units = preserved_indices.map(
+                        i => this._merged_units[i]
+                    ).valueOf();
                     this._merged_varieties = preserved_varieties;
                     this._merged_varieties.push(merged_variety);
+                    this._merged_units = preserved_units;
+                    this._merged_units.push(merged_unit);
                 }
 s
                 //matrix transform the unmerged weight table into the merged weight table
