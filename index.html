@@ -113,7 +113,7 @@ s
                     ).valueOf();
                 }
 
-                //convert a float in pounds to pounds and ounces
+                //display weights in units, handling mixed-base division when appropriate
                 #unitify(mat , units) {
                     const lbs = math.floor(mat).valueOf();
                     const oz = math.floor(math.multiply(16,math.mod(mat,1))).valueOf();
@@ -121,9 +121,16 @@ s
                         if(units[i] === 'lbs') {
                             return ''+lbs[i]+' lbs. '+oz[i]+' oz.';
                         } else if(units[i] === 'unitless') {
-                            return ''+lbs[i];
+                            return ''+mat[i];
+                        } else if(units[i] === 'dozen') {
+                            const remainder = math.floor(math.mod(math.multiply(mat,12),12)).valueOf();
+                            if(remainder > 0) {
+                                return ''+remainder;
+                            } else {
+                                return ''+mat+' dozen';
+                        }
                         } else {
-                            return ''+lbs[i] + ' ' + units[i];
+                            return ''+mat[i] + ' ' + units[i];
                         }
                     }).valueOf();
                 }
