@@ -18,31 +18,38 @@ layout: default
                 //class to manage an object representing the current table of produce weights and helper methods for table transormations
                 _weights;//array of weights, unmerged; parallel to varieties
                 _varieties;//array of varieties, unmerged; parralel to weights
+                _units;//array of units, unmerged, parallel to weights and varieties
                 _merge_matrix;//SparseMatrix to store which entries in varieties should be merged to produce the merged weight list.
                 _merged_varieties;//array of variety names after merging
                 n_shares;//how many csa shares total
                 n_coop_shares;//how many shares diverted to co-op
 
-                constructor(n_shares , n_coop_shares , weights = [] , varieties = [] , merge_matrix = math.matrix([[1]],'sparse') , merged_varieties = []) {
+                constructor(n_shares , n_coop_shares , weights = [] , varieties = [] , units = [] , merge_matrix = math.matrix([[1]],'sparse') , merged_varieties = [] , merged_units = []) {
                     this._weights = weights;
                     this._varieties = varieties;
+                    this._units = units;
                     this._merge_matrix = merge_matrix;
                     this._merged_varieties = merged_varieties;
+                    this._merged_units = merged_units;
                     this.n_shares = n_shares;
                     this.n_coop_shares = n_coop_shares;
                 }
                 
                 //log a new box that you just weighed
-                add_entry(veg , mass) {
+                //optinal argument to set an alternate unit. "unitless" won't display;
+                // others will display; anything other than lbs will assume base-10 division
+                add_entry(veg , mass , unit = 'lbs') {
                     if(this._varieties.indexOf(veg) >= 0) {//we already have a row
                         this._weights[this._varieties.indexOf(veg)] += mass;
                     } else {//append a new rows
                         this._varieties.push(veg);
                         this._weights.push(mass);
+                        this._units.push(unit);
                         if(this._merged_varieties.length > 0) {
                             this._merge_matrix.set([this._merge_matrix.size()[0] , this._merge_matrix.size()[1]] , 1);
                         }
                         this._merged_varieties.push(veg);
+                        this._merged_units.push(unit);
                     }
                 }
 
@@ -79,6 +86,16 @@ layout: default
                     const merged_variety = row_indices.map(
                         i => this._merged_varieties[i]).reduce(
                             (accumulator , currentValue) => accumulator + ' or ' + currentValue);
+                    const merged_units = row_indices.map(
+                        i=> this._merged_units[i]).reduce(
+                            (accumulator , currentValue) => {
+                                if(accumulator == currentValue) {
+                                    return accumulator;
+                                } else {
+                                    return 'Incompatible Units';
+                                }
+                            }
+                    )
                     this._merged_varieties = preserved_varieties;
                     this._merged_varieties.push(merged_variety);
                 }
@@ -96,16 +113,31 @@ s
                     ).valueOf();
                 }
 
-                //convert a float in pounds to pounds and ounces
-                #to_ounces_and_pounds(mat) {
+                //display weights in units, handling mixed-base division when appropriate
+                #unitify(mat , units) {
                     const lbs = math.floor(mat).valueOf();
                     const oz = math.floor(math.multiply(16,math.mod(mat,1))).valueOf();
-                    return math.range(0,lbs.length).map((i) => ''+lbs[i]+' lbs. '+oz[i]+' oz.').valueOf();
+                    return math.range(0,lbs.length).map((i) => {
+                        if(units[i] === 'lbs') {
+                            return ''+lbs[i]+' lbs. '+oz[i]+' oz.';
+                        } else if(units[i] === 'unitless') {
+                            return ''+mat[i];
+                        } else if(units[i] === 'dozen') {
+                            const remainder = math.floor(math.mod(math.multiply(mat[i],12),12)).valueOf();
+                            if(remainder > 0) {
+                                return ''+(remainder+(12*math.floor(mat[i])));
+                            } else {
+                                return ''+mat[i]+' dozen';
+                        }
+                        } else {
+                            return ''+mat[i] + ' ' + units[i];
+                        }
+                    }).valueOf();
                 }
 
                 //calculate and return one share's amounts as a json of {variety:weight}
                 get one_share() {
-                    return this._json_zip(this._merged_varieties , this.#to_ounces_and_pounds(this.#calc_one_share()));
+                    return this._json_zip(this._merged_varieties , this.#unitify(this.#calc_one_share() , this._merged_units));
                 }
 
                 //private function to zip two parallel arrays into a json of {arr1:arr2}
@@ -118,17 +150,17 @@ s
 
                 //return a JSON object of {variety:weight}. by default, this will be merged
                 get weights() {
-                    return this._json_zip(this._merged_varieties , this._merged_weights());
+                    return this._json_zip(this._merged_varieties , this.#unitify(this._merged_weights() , this._merged_units));
                 }
 
                 //return a JSON object of {variety:weight} but always the unmerged
                 get_unmerged_weights() {
-                    return this._json_zip(this._varieties , this._weights);
+                    return this._json_zip(this._varieties , this.#unitify(this._weights , this._units));
                 }
 
                 //calculate and return the co-op's ammount as a json of {variety:weight}
                 get coop_weights() {
-                    return this._json_zip(this._merged_varieties , this.#to_ounces_and_pounds(this.#calc_coop_weights()));
+                    return this._json_zip(this._merged_varieties , this.#unitify(this.#calc_coop_weights() , this._merged_units));
                 }
 
                 //serialize into JSON without adding in unhelpful math.js objects
@@ -139,18 +171,22 @@ s
                         return {
                             '_weights': this._weights ,
                             '_varieties' : this._varieties ,
+                            '_units' : this._units ,
                             '_merge_matrix' : this._merge_matrix.valueOf() ,
                             '_merged_varieties' : this._merged_varieties ,
+                            '_merged_units' : this._merged_units ,
                             'n_shares' : this.n_shares ,
                             'n_coop_shares' : this.n_coop_shares ,
-                            'date' : d_str
+                            'date' : d_str ,
                         }
                     } else {
                         return {
                             '_weights': this._weights ,
                             '_varieties' : this._varieties ,
+                            '_units' : this._units ,
                             '_merge_matrix' : this._merge_matrix.valueOf() ,
                             '_merged_varieties' : this._merged_varieties ,
+                            '_merged_units' : this._merged_units ,
                             'n_shares' : this.n_shares ,
                             'n_coop_shares' : this.n_coop_shares ,
                         }
@@ -188,17 +224,22 @@ s
                     parseFloat(obj.n_coop_shares) ,
                     obj._weights ,
                     obj._varieties ,
+                    obj._units ,
                     math.matrix(obj._merge_matrix , 'sparse') ,
                     obj._merged_varieties ,
+                    obj._merged_units ,
                     );
             }
 
             //collect a user's entry from the produce weight form; append to the ProduceWeight in local storage, and clear form
             function add() {
                 let my_pw = local_get_object('pw');
-                my_pw.add_entry(document.getElementById("veg").value , parseFloat(document.getElementById("mass").value));
+                my_pw.add_entry(document.getElementById("veg").value ,
+                                parseFloat(document.getElementById("mass").value),
+                                document.getElementById("unit").value);
                 document.getElementById("veg").value = 'Variety';
-                document.getElementById("mass").value = 'Weight';
+                document.getElementById("mass").value = 'Amount';
+                document.getElementById("unit").value = 'lbs';
                 local_store_object('pw' , my_pw);
                 //display_running(my_pw.weights);
                 toggle('total');
@@ -267,7 +308,7 @@ s
                 const headerItem = document.createElement('th');
                 headerItem.textContent = 'Item';
                 const headerWeight = document.createElement('th');
-                headerWeight.textContent = 'Weight';
+                headerWeight.textContent = 'Amount';
                 headerRow.appendChild(headerItem);
                 headerRow.appendChild(headerWeight);
                 table.appendChild(headerRow);
@@ -414,15 +455,21 @@ s
         </table>
         <div id = "above_table">
             <form onsubmit="return false;" method = "post" name = "setup" id = "setup">
-                <input type = "text" id = "n_shares" value = "# CSA shares" onclick = "document.getElementById('n_shares').value = ''" inputmode="numeric"><br>
-                <input type = "text" id = "n_coop_shares" value = "# co-op shares" onclick = "document.getElementById('n_coop_shares').value = ''" inputmode="numeric"><br>
+                <input type = "text" id = "n_shares" value = "# CSA shares" onclick = "document.getElementById('n_shares').value = ''" inputmode="numeric"style="width: 50%;"><br>
+                <input type = "text" id = "n_coop_shares" value = "# co-op shares" onclick = "document.getElementById('n_coop_shares').value = ''" inputmode="numeric"style="width: 50%;"><br>
                 <input type = "submit" value = "Start Weighing" onclick = "launch()" id = "launch_button">
             </form>
             <br>
             <div id = "additem" style = "display: none;">
                 <form onsubmit = "return false;" method = "post" name = "additem">
-                    <input type = "text" id = "veg" value = "Variety" onclick = "document.getElementById('veg').value = ''" style="width: 40;"><br>
-                    <input type = "text" id = "mass" value = "Weight" onclick = "document.getElementById('mass').value = ''" style="width: 40;" inputmode="decimal">
+                    <input type = "text" id = "veg" value = "Variety" onclick = "document.getElementById('veg').value = ''" style="width: 50%;"><br>
+                    <input type = "text" id = "mass" value = "Amount" onclick = "document.getElementById('mass').value = ''" style="width: 20%;" inputmode="decimal">
+                    <select name = "unit" id = "unit">
+                        <option value = "lbs">lbs</option>
+                        <option value = "unitless">unitless</option>
+                        <option value = "dozen">dozen</option>
+                        <option value = "pints">pints</option>
+                    </select>
                     <input type = "submit" value = "Add" onclick = "add();">
                 </form>
             </div>
