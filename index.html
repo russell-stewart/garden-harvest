@@ -143,12 +143,12 @@ s
 
                 //return a JSON object of {variety:weight}. by default, this will be merged
                 get weights() {
-                    return this._json_zip(this._merged_varieties , this._merged_weights());
+                    return this._json_zip(this._merged_varieties , this.#to_ounces_and_pounds(this._merged_weights() , this._merged_units));
                 }
 
                 //return a JSON object of {variety:weight} but always the unmerged
                 get_unmerged_weights() {
-                    return this._json_zip(this._varieties , this._weights);
+                    return this._json_zip(this._varieties , this.#to_ounces_and_pounds(this._weights , this._units));
                 }
 
                 //calculate and return the co-op's ammount as a json of {variety:weight}
