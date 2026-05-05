@@ -55,7 +55,7 @@ layout: default
 
                 //compute how much one share should be
                 #calc_one_share() {
-                    return math.multiply((1.0/this.n_shares) , this._merged_weights());
+                    return math.multiply((1.0/(this.n_shares + this.n_coop_shares)) , this._merged_weights());
                 }
 
                 //compute total weight to give to co-op
