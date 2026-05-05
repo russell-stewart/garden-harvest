@@ -123,11 +123,11 @@ s
                         } else if(units[i] === 'unitless') {
                             return ''+mat[i];
                         } else if(units[i] === 'dozen') {
-                            const remainder = math.floor(math.mod(math.multiply(mat,12),12)).valueOf();
+                            const remainder = math.floor(math.mod(math.multiply(mat[i],12),12)).valueOf();
                             if(remainder > 0) {
-                                return ''+remainder;
+                                return ''+(remainder+(12*math.floor(mat[i])));
                             } else {
-                                return ''+mat+' dozen';
+                                return ''+mat[i]+' dozen';
                         }
                         } else {
                             return ''+mat[i] + ' ' + units[i];
