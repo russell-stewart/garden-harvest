@@ -114,7 +114,7 @@ s
                 }
 
                 //convert a float in pounds to pounds and ounces
-                #to_ounces_and_pounds(mat , units) {
+                #unitify(mat , units) {
                     const lbs = math.floor(mat).valueOf();
                     const oz = math.floor(math.multiply(16,math.mod(mat,1))).valueOf();
                     return math.range(0,lbs.length).map((i) => {
@@ -130,7 +130,7 @@ s
 
                 //calculate and return one share's amounts as a json of {variety:weight}
                 get one_share() {
-                    return this._json_zip(this._merged_varieties , this.#to_ounces_and_pounds(this.#calc_one_share() , this._merged_units));
+                    return this._json_zip(this._merged_varieties , this.#unitify(this.#calc_one_share() , this._merged_units));
                 }
 
                 //private function to zip two parallel arrays into a json of {arr1:arr2}
@@ -143,17 +143,17 @@ s
 
                 //return a JSON object of {variety:weight}. by default, this will be merged
                 get weights() {
-                    return this._json_zip(this._merged_varieties , this.#to_ounces_and_pounds(this._merged_weights() , this._merged_units));
+                    return this._json_zip(this._merged_varieties , this.#unitify(this._merged_weights() , this._merged_units));
                 }
 
                 //return a JSON object of {variety:weight} but always the unmerged
                 get_unmerged_weights() {
-                    return this._json_zip(this._varieties , this.#to_ounces_and_pounds(this._weights , this._units));
+                    return this._json_zip(this._varieties , this.#unitify(this._weights , this._units));
                 }
 
                 //calculate and return the co-op's ammount as a json of {variety:weight}
                 get coop_weights() {
-                    return this._json_zip(this._merged_varieties , this.#to_ounces_and_pounds(this.#calc_coop_weights() , this._merged_units));
+                    return this._json_zip(this._merged_varieties , this.#unitify(this.#calc_coop_weights() , this._merged_units));
                 }
 
                 //serialize into JSON without adding in unhelpful math.js objects
