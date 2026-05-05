@@ -132,7 +132,11 @@ s
                     const oz = math.floor(math.multiply(16,math.mod(mat,1))).valueOf();
                     return math.range(0,lbs.length).map((i) => {
                         if(units[i] === 'lbs') {
+                            if (oz[i] > 0) {
                             return ''+this.#round(lbs[i],0)+' lbs. '+this.#round(oz[i],0)+' oz.';
+                            } else {
+                                return ''+this.#round(lbs[i],0)+' lbs.';
+                            }
                         } else if(units[i] === 'unitless') {
                             return ''+this.#round(mat[i]);
                         } else if(units[i] === 'dozen') {
