@@ -397,7 +397,7 @@ s
                 my_pw.date = new Date();
                 my_pw_json = JSON.stringify(my_pw);
                 const link = document.createElement("a");
-                const file = new Blob([my_pw_json], { type: 'text/plain' });
+                const file = new Blob([my_pw_json], { type: 'text/json' });
                 link.href = URL.createObjectURL(file);
                 link.download = "produceweight.json";
                 link.click();
