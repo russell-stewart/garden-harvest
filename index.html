@@ -18,6 +18,7 @@ layout: default
                 //class to manage an object representing the current table of produce weights and helper methods for table transormations
                 _weights;//array of weights, unmerged; parallel to varieties
                 _varieties;//array of varieties, unmerged; parralel to weights
+                _units;//array of units, unmerged, parallel to weights and varieties
                 _merge_matrix;//SparseMatrix to store which entries in varieties should be merged to produce the merged weight list.
                 _merged_varieties;//array of variety names after merging
                 n_shares;//how many csa shares total
@@ -33,12 +34,15 @@ layout: default
                 }
                 
                 //log a new box that you just weighed
-                add_entry(veg , mass) {
+                //optinal argument to set an alternate unit. "unitless" won't display;
+                // others will display; anything other than lbs will assume base-10 division
+                add_entry(veg , mass , unit = 'lbs') {
                     if(this._varieties.indexOf(veg) >= 0) {//we already have a row
                         this._weights[this._varieties.indexOf(veg)] += mass;
                     } else {//append a new rows
                         this._varieties.push(veg);
                         this._weights.push(mass);
+                        this._units.push(unit);
                         if(this._merged_varieties.length > 0) {
                             this._merge_matrix.set([this._merge_matrix.size()[0] , this._merge_matrix.size()[1]] , 1);
                         }
@@ -97,15 +101,23 @@ s
                 }
 
                 //convert a float in pounds to pounds and ounces
-                #to_ounces_and_pounds(mat) {
+                #to_ounces_and_pounds(mat , units) {
                     const lbs = math.floor(mat).valueOf();
                     const oz = math.floor(math.multiply(16,math.mod(mat,1))).valueOf();
-                    return math.range(0,lbs.length).map((i) => ''+lbs[i]+' lbs. '+oz[i]+' oz.').valueOf();
+                    return math.range(0,lbs.length).map((i) => {
+                        if(units[i] === 'lbs') {
+                            return ''+lbs[i]+' lbs. '+oz[i]+' oz.';
+                        } else if(units[i] === 'unitless') {
+                            return ''+lbs[i];
+                        } else {
+                            return ''+lbs[i] + ' ' + units[i];
+                        }
+                    }).valueOf();
                 }
 
                 //calculate and return one share's amounts as a json of {variety:weight}
                 get one_share() {
-                    return this._json_zip(this._merged_varieties , this.#to_ounces_and_pounds(this.#calc_one_share()));
+                    return this._json_zip(this._merged_varieties , this.#to_ounces_and_pounds(this.#calc_one_share() , this._units));
                 }
 
                 //private function to zip two parallel arrays into a json of {arr1:arr2}
@@ -414,15 +426,19 @@ s
         </table>
         <div id = "above_table">
             <form onsubmit="return false;" method = "post" name = "setup" id = "setup">
-                <input type = "text" id = "n_shares" value = "# CSA shares" onclick = "document.getElementById('n_shares').value = ''" inputmode="numeric"><br>
-                <input type = "text" id = "n_coop_shares" value = "# co-op shares" onclick = "document.getElementById('n_coop_shares').value = ''" inputmode="numeric"><br>
+                <input type = "text" id = "n_shares" value = "# CSA shares" onclick = "document.getElementById('n_shares').value = ''" inputmode="numeric"style="width: 50%;"><br>
+                <input type = "text" id = "n_coop_shares" value = "# co-op shares" onclick = "document.getElementById('n_coop_shares').value = ''" inputmode="numeric"style="width: 50%;"><br>
                 <input type = "submit" value = "Start Weighing" onclick = "launch()" id = "launch_button">
             </form>
             <br>
             <div id = "additem" style = "display: none;">
                 <form onsubmit = "return false;" method = "post" name = "additem">
-                    <input type = "text" id = "veg" value = "Variety" onclick = "document.getElementById('veg').value = ''" style="width: 40;"><br>
-                    <input type = "text" id = "mass" value = "Weight" onclick = "document.getElementById('mass').value = ''" style="width: 40;" inputmode="decimal">
+                    <input type = "text" id = "veg" value = "Variety" onclick = "document.getElementById('veg').value = ''" style="width: 50%;"><br>
+                    <input type = "text" id = "mass" value = "Amount" onclick = "document.getElementById('mass').value = ''" style="width: 20%;" inputmode="decimal">
+                    <select name = "unit" id = "unit">
+                        <option value = "lbs">lbs</option>
+                        <option value = "unitless">unitless</option>
+                    </select>
                     <input type = "submit" value = "Add" onclick = "add();">
                 </form>
             </div>
